@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledger: expenses & habits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="preloader" aria-live="polite" aria-label="Loading Ledger">
+        <div class="preloader-inner">
+            <svg class="preloader-ring" viewBox="0 0 100 100" width="72" height="72">
+                <circle class="preloader-ring-track" cx="50" cy="50" r="42"></circle>
+                <circle class="preloader-ring-sweep" cx="50" cy="50" r="42"></circle>
+                <path class="preloader-coin-slot" d="M38 50 h24 M50 38 v24" />
+            </svg>
+            <div class="preloader-word" aria-hidden="true">
+                <span style="--i:0">L</span><span style="--i:1">e</span><span style="--i:2">d</span><span
+                    style="--i:3">g</span><span style="--i:4">e</span><span style="--i:5">r</span>
+            </div>
+            <div class="preloader-sub">balancing the books…</div>
+        </div>
+    </div>
+
+    <div class="busy-indicator" id="busy-indicator" aria-live="polite">
+        <span class="busy-dot"></span>
+        <span class="busy-label" id="busy-label">saving…</span>
+    </div>
+
+    <div class="wrap">
+        <header>
+            <h1>Ledger</h1>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <button type="button" id="household-toggle"
+                    style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">Personal</button>
+                <button type="button" id="guide-toggle"
+                    style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">How to use</button>
+                <select id="currency-select"
+                    title="Sets the currency for this ledger. Switching relabels the display only — it does not convert past amounts."
+                    style="font-family:'IBM Plex Mono', monospace; font-size:0.8rem;"></select>
+                <div class="date-badge" id="today-badge"></div>
+            </div>
+        </header>
+
+        <section id="household-section" style="display:none; margin-bottom:2.5rem;">
+            <h2>Shared ledger <span class="tag">household</span></h2>
+            <p class="data-note" style="margin-bottom:1rem;">A shared ledger uses a household code instead of your
+                private storage. Anyone who enters the <strong>same code</strong>, on any device, sees and can edit this
+                exact ledger expenses, habits, and recurring items included. Don't share a code for anything you want
+                kept private, and pick something only your household would guess.</p>
+            <div id="household-status" style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0.9rem;"></div>
+            <div class="data-actions">
+                <input type="text" id="household-code" placeholder="Household code, e.g. amara-house"
+                    style="min-width:220px;">
+                <button type="button" id="household-join-btn">Join / create shared ledger</button>
+                <button type="button" id="household-leave-btn">Back to personal ledger</button>
+            </div>
+        </section>
+
+        <section id="guide-section" style="display:none; margin-bottom:2.5rem;">
+            <h2>How to use this ledger <span class="tag">guide</span></h2>
+
+            <div class="guide-block">
+                <h3>Tracking expenses</h3>
+                <p>Type what you spent or received in the <strong>Description</strong> field, enter the amount, choose
+                    whether it's a <span style="color:var(--debit)">debit</span> (money out) or <span
+                        style="color:var(--credit)">credit</span> (money in), and pick a <strong>category</strong> from
+                    the dropdown Food, Transport, Housing, and so on. Press <strong>Add</strong>.</p>
+                <p>Every entry appears in the list with today's date and its category tag. The <strong>balance</strong>
+                    at the bottom is calculated live: all credits added up, minus all debits. Click the
+                    <strong>×</strong> next to any row to delete it the balance updates instantly.
+                </p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Quick add</h3>
+                <p>The single line above the full form lets you log an expense in one go type something like
+                    <strong>"coffee 1500"</strong> and it works out the amount, guesses the category from the word
+                    "coffee", and logs it as a debit. Add the word <strong>"credit"</strong> anywhere in the line for
+                    money coming in, or type a category name yourself to override the guess, like <strong>"taxi 4200
+                        transport"</strong>.
+                </p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Repeating expenses</h3>
+                <p>Tick <strong>"Repeat this every month"</strong> before adding an expense like rent or a
+                    subscription and it's logged automatically on the same day every month from then on, without you
+                    retyping it. Each generated entry carries a small "monthly" tag so you can always see which lines
+                    are automatic.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Monthly totals</h3>
+                <p>Below the ledger, the <strong>Monthly totals</strong> panel shows what you spent, what you received,
+                    and the net for whichever month you pick from the dropdown. It defaults to the current month and
+                    includes every past month you've logged entries in.</p>
+                <p>The bars underneath break down your spending by category for that month, longest bar first, so you
+                    can see at a glance where the money actually went.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Building habits</h3>
+                <p>Type a habit name (for example, "Drink water" or "Read 20 minutes") and press <strong>Add</strong>.
+                    Each habit gets its own row showing the last 7 days as small tally marks, oldest on the left, today
+                    on the right.</p>
+                <p>Click a day's mark to toggle it a solid mark means done, a faded mark means not done. You can tap
+                    any day in the row, not just today, so you can catch up on a day you forgot to log.</p>
+                <p>The <strong>streak</strong> counts backward from today: it stops counting the moment it hits a day
+                    you didn't complete. Marking today keeps the streak alive; skipping a day resets it.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Year view</h3>
+                <p>Click <strong>"year view"</strong> next to any habit to expand a full year of squares, one per day,
+                    in the style of a contribution graph filled means done, faded means not. It's the fastest way to
+                    spot a long streak or a stretch you fell off. Click any square in it to toggle that day, same as the
+                    7-day row above it.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Choosing a currency</h3>
+                <p>Use the dropdown in the top right to pick from 30 major world currencies. Each one is formatted the
+                    way it's actually written in real life the right symbol, and the right number of decimal places
+                    (Japanese yen and Korean won show whole numbers, most others show two decimal places).</p>
+                <p>Switching currency changes how the ledger displays going forward. It does <strong>not</strong>
+                    convert amounts you already entered, since doing that accurately would require a live,
+                    constantly-updating exchange rate this app doesn't have. If you're tracking money in more than one
+                    currency, it's best to keep a separate ledger for each.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Sharing a ledger with your household</h3>
+                <p>Click <strong>"Personal"</strong> in the top left to open sharing options. Enter a household code —
+                    something like a family name only your household would think of and press <strong>"Join / create
+                        shared ledger"</strong>. Anyone who enters that exact code, on any device, sees and edits the
+                    same expenses, habits, and recurring items as you.</p>
+                <p>Your original personal ledger isn't affected — it's kept completely separate, and you can switch back
+                    to it any time with <strong>"Back to personal ledger."</strong> Because a shared ledger is only
+                    protected by its code, don't use one for anything you wouldn't want a stranger to see if they
+                    guessed it.</p>
+            </div>
+
+            <div class="guide-block">
+                <h3>Data</h3>
+                <p>Everything you enter is saved automatically the moment you add or change something there's no save
+                    button to remember. On a personal ledger, your data is private to you; on a shared ledger, it's
+                    visible to anyone with the code. Closing the tab or coming back later won't lose anything either
+                    way.</p>
+                <p><strong>Export expenses as CSV</strong> downloads your expense history as a spreadsheet file you can
+                    open in Excel, Google Sheets, or Numbers. <strong>Download full backup</strong> saves everything
+                    expenses, habits, recurring items, and your currency setting as a single file you can keep safe or
+                    move to another device. <strong>Restore from backup</strong> loads a previously downloaded backup
+                    file back into the app this replaces whatever is currently here, so only restore a file you trust.
+                </p>
+            </div>
+        </section>
+
+        <div class="cols">
+            <section id="expense-section">
+                <h2>Expenses <span class="tag">debit / credit</span></h2>
+                <form class="entry" id="quick-add-form" style="grid-template-columns:1fr auto; margin-bottom:0.6rem;">
+                    <input type="text" id="quick-add-input"
+                        placeholder="Quick add — e.g. coffee 1500, or salary 200000 credit">
+                    <button type="submit">Add</button>
+                </form>
+                <p class="data-note" style="margin:0 0 1rem;">Type an amount anywhere in the line. Add a category name
+                    or the word "credit" to set those too otherwise it's guessed for you.</p>
+                <form class="entry" id="expense-form">
+                    <input type="text" id="exp-desc" placeholder="Description" required>
+                    <input type="number" id="exp-amount" placeholder="0.00" step="0.01" min="0" required>
+                    <button type="submit">Add</button>
+                </form>
+                <div class="kind-toggle" style="margin:-0.6rem 0 0.7rem;">
+                    <button type="button" class="kind-btn active debit" id="kind-debit" data-kind="debit">−
+                        debit</button>
+                    <button type="button" class="kind-btn credit" id="kind-credit" data-kind="credit">+ credit</button>
+                </div>
+                <select id="exp-category" style="width:100%; margin-bottom:0.6rem;"></select>
+                <label class="recurring-label">
+                    <input type="checkbox" id="exp-recurring">
+                    Repeat this every month
+                </label>
+                <div class="ledger-rows" id="ledger-rows"></div>
+                <div class="balance-block">
+                    <span class="label">balance</span>
+                    <span class="value" id="balance-value">$0.00</span>
+                </div>
+
+                <div class="monthly-summary">
+                    <div class="monthly-summary-head">
+                        <h3>Monthly totals</h3>
+                        <select id="month-select" style="font-size:0.78rem;"></select>
+                    </div>
+                    <div id="monthly-totals-body"></div>
+                </div>
+            </section>
+
+            <section id="habit-section">
+                <h2>Habits <span class="tag">7-day tally</span></h2>
+                <form class="entry habit-form" id="habit-form">
+                    <input type="text" id="habit-name" placeholder="New habit" required>
+                    <button type="submit">Add</button>
+                </form>
+                <div class="habit-list" id="habit-list"></div>
+            </section>
+        </div>
+
+        <section id="data-section">
+            <h2>Your data <span class="tag">export / backup</span></h2>
+            <div class="data-actions">
+                <button type="button" id="export-csv-btn">Export expenses as CSV</button>
+                <button type="button" id="backup-json-btn">Download full backup</button>
+                <label class="file-btn" for="restore-input">Restore from backup</label>
+                <input type="file" id="restore-input" accept="application/json" style="display:none;">
+            </div>
+            <p class="data-note">CSV export opens in Excel, Sheets, or Numbers for your own analysis. The full backup is
+                a JSON file with everything expenses, habits, and your currency setting so you can restore it here
+                later or move it to another device. Restoring replaces what's currently in the app, so only do it with a
+                backup you trust.</p>
+        </section>
+
+        <footer class="site-footer">ayocodes</footer>
+    </div>
+
+    <script src="storage-shim.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
