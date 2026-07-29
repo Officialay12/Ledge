@@ -1,14 +1,20 @@
 // api/household.js
-// Generic key/value endpoint scoped by household code, backed by Vercel KV.
+// Generic key/value endpoint scoped by household code, backed by Upstash
+// Redis (Vercel's Marketplace storage provider — Vercel KV itself was
+// sunset and folded into this integration).
 // This is what makes "shared" ledgers actually shared across devices —
 // every device that enters the same code reads and writes the same
 // records in this database, instead of separate local browser storage.
 //
-// Requires a KV database connected to this Vercel project (Storage tab
-// in the Vercel dashboard -> Create Database -> KV -> Connect to Project).
-// That step injects KV_REST_API_URL / KV_REST_API_TOKEN automatically.
+// Requires a Redis database connected to this Vercel project: Storage tab
+// in the Vercel dashboard -> Browse Storage -> Upstash -> create a Redis
+// database -> Connect to Project. That step injects UPSTASH_REDIS_REST_URL
+// / UPSTASH_REDIS_REST_TOKEN (or the legacy KV_REST_API_URL / TOKEN names,
+// which the SDK also reads) automatically.
 
-const { kv } = require("@vercel/kv");
+const { Redis } = require("@upstash/redis");
+
+const redis = Redis.fromEnv({ automaticDeserialization: false });
 
 const MAX_VALUE_BYTES = 2 * 1024 * 1024; // 2MB safety cap per key
 
@@ -35,8 +41,10 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const value = await kv.get(dataKey);
-      res.status(200).json({ value: value === undefined ? null : value });
+      const value = await redis.get(dataKey);
+      res
+        .status(200)
+        .json({ value: value === undefined || value === null ? null : value });
       return;
     }
 
@@ -58,17 +66,17 @@ module.exports = async function handler(req, res) {
         res.status(413).json({ error: "value too large" });
         return;
       }
-      await kv.set(dataKey, value);
+      await redis.set(dataKey, value);
       const updatedAt = Date.now();
-      await kv.set(metaKey, JSON.stringify({ updatedAt, changedKey: key }));
+      await redis.set(metaKey, JSON.stringify({ updatedAt, changedKey: key }));
       res.status(200).json({ ok: true, updatedAt });
       return;
     }
 
     if (req.method === "DELETE") {
-      await kv.del(dataKey);
+      await redis.del(dataKey);
       const updatedAt = Date.now();
-      await kv.set(metaKey, JSON.stringify({ updatedAt, changedKey: key }));
+      await redis.set(metaKey, JSON.stringify({ updatedAt, changedKey: key }));
       res.status(200).json({ ok: true, updatedAt });
       return;
     }
@@ -79,7 +87,7 @@ module.exports = async function handler(req, res) {
     console.error("household api error", err);
     res.status(500).json({
       error:
-        "Storage backend error — is a KV database connected to this Vercel project?",
+        "Storage backend error — is a Redis database connected to this Vercel project?",
     });
   }
 };
