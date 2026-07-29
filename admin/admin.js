@@ -1,8 +1,9 @@
 // admin.js — Ledger admin panel
-// Talks only to /api/admin/* endpoints, all of which require the signed
-// session cookie set by /api/admin/login. This page manages ONLY household
-// (shared) ledgers — personal ledgers live solely in each user's own
-// browser storage and are never visible to this panel or to the server.
+// Talks only to /api/admin (a single consolidated endpoint, routed by
+// ?action=), which requires the signed session cookie set by the login
+// action. This page manages ONLY household (shared) ledgers — personal
+// ledgers live solely in each user's own browser storage and are never
+// visible to this panel or to the server.
 
 const CATEGORIES = [
   "Food & dining",
@@ -90,7 +91,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   errorEl.textContent = "";
   submitBtn.disabled = true;
   try {
-    await api("/api/admin/login", {
+    await api("/api/admin?action=login", {
       method: "POST",
       body: JSON.stringify({ password }),
     });
@@ -106,7 +107,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
   try {
-    await api("/api/admin/logout", { method: "POST" });
+    await api("/api/admin?action=logout", { method: "POST" });
   } catch {}
   households = [];
   selectedCode = null;
@@ -131,7 +132,7 @@ async function loadHouseholds() {
   const listEl = document.getElementById("household-list");
   listEl.innerHTML = `<div class="household-list-empty">Loading…</div>`;
   try {
-    const data = await api("/api/admin/households");
+    const data = await api("/api/admin?action=households");
     households = data.households || [];
     document.getElementById("household-count").textContent =
       `${households.length} household${households.length === 1 ? "" : "s"}`;
@@ -197,7 +198,7 @@ async function openHousehold(code) {
 
   try {
     detailData = await api(
-      `/api/admin/household-data?code=${encodeURIComponent(code)}`,
+      `/api/admin?action=household&code=${encodeURIComponent(code)}`,
     );
     detailData.expenses = detailData.expenses || [];
     detailData.habits = detailData.habits || [];
@@ -478,7 +479,7 @@ document.getElementById("save-btn").addEventListener("click", async () => {
   btn.textContent = "Saving…";
   try {
     const result = await api(
-      `/api/admin/household-data?code=${encodeURIComponent(selectedCode)}`,
+      `/api/admin?action=household&code=${encodeURIComponent(selectedCode)}`,
       {
         method: "PUT",
         body: JSON.stringify({
@@ -513,7 +514,7 @@ document
     if (!confirmed) return;
     try {
       await api(
-        `/api/admin/household-data?code=${encodeURIComponent(selectedCode)}`,
+        `/api/admin?action=household&code=${encodeURIComponent(selectedCode)}`,
         { method: "DELETE" },
       );
       selectedCode = null;
@@ -537,7 +538,7 @@ window.addEventListener("beforeunload", (e) => {
 /* ---------- Boot: check for an existing session ---------- */
 (async function boot() {
   try {
-    const { authenticated } = await api("/api/admin/session");
+    const { authenticated } = await api("/api/admin?action=session");
     if (authenticated) {
       showDashboard();
       await loadHouseholds();

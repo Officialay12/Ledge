@@ -131,10 +131,7 @@ self.addEventListener("fetch", (event) => {
 
   // Never intercept the admin panel or its API — no caching, no offline
   // fallback, just pass straight through to the network every time.
-  if (
-    url.pathname.startsWith("/admin/") ||
-    url.pathname.startsWith("/api/admin/")
-  ) {
+  if (url.pathname.startsWith("/admin/") || url.pathname === "/api/admin") {
     return;
   }
 

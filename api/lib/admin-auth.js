@@ -1,8 +1,9 @@
-// api/admin/_lib/auth.js
+// api/_lib/admin-auth.js
 // Shared helpers for the admin panel: password check, signed session
-// cookies, and the Redis client. Lives under a `_lib` folder specifically
-// because Vercel does not turn underscore-prefixed paths into routes —
-// this file is never itself reachable as an endpoint.
+// cookies, and the Redis client. Lives under `_lib` specifically because
+// Vercel does not turn underscore-prefixed paths into routes — this file
+// is never itself reachable as an endpoint, and doesn't count toward the
+// per-deployment Serverless Function limit.
 
 const crypto = require("crypto");
 const { Redis } = require("@upstash/redis");
@@ -30,9 +31,6 @@ function getAdminPassword() {
   return process.env.ADMIN_PASSWORD || null;
 }
 
-// Derives a signing key from the admin password rather than reusing the
-// password itself as the HMAC key, so the raw password is never the same
-// secret that's embedded in session tokens.
 function getSigningKey() {
   const pw = getAdminPassword();
   if (!pw) return null;
@@ -138,9 +136,6 @@ function clearSessionCookie(res) {
   );
 }
 
-// Simple Redis-backed rate limit on login attempts, keyed by a coarse
-// client identifier. Not perfect (IP can be spoofed/shared) but meaningfully
-// slows down password guessing against real financial data.
 async function checkLoginRateLimit(identifier) {
   if (!redis) return true;
   const key = `admin:loginattempts:${identifier}`;
@@ -158,7 +153,6 @@ async function resetLoginRateLimit(identifier) {
 
 module.exports = {
   redis,
-  SESSION_COOKIE,
   checkPassword,
   requireAdmin,
   isAuthenticated,
