@@ -203,20 +203,29 @@ async function handleHouseholdDetail(req, res) {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
-  const { action } = req.query;
+  try {
+    const { action } = req.query;
 
-  switch (action) {
-    case "login":
-      return handleLogin(req, res);
-    case "logout":
-      return handleLogout(req, res);
-    case "session":
-      return handleSession(req, res);
-    case "households":
-      return handleHouseholdsList(req, res);
-    case "household":
-      return handleHouseholdDetail(req, res);
-    default:
-      res.status(400).json({ error: "Unknown or missing action" });
+    switch (action) {
+      case "login":
+        return await handleLogin(req, res);
+      case "logout":
+        return await handleLogout(req, res);
+      case "session":
+        return await handleSession(req, res);
+      case "households":
+        return await handleHouseholdsList(req, res);
+      case "household":
+        return await handleHouseholdDetail(req, res);
+      default:
+        res.status(400).json({ error: "Unknown or missing action" });
+    }
+  } catch (err) {
+    // Last-resort safety net: whatever broke, the client still gets clean
+    // JSON back instead of a raw crash page it can't parse.
+    console.error("admin handler crashed", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Unexpected server error" });
+    }
   }
 };

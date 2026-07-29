@@ -138,17 +138,28 @@ function clearSessionCookie(res) {
 
 async function checkLoginRateLimit(identifier) {
   if (!redis) return true;
-  const key = `admin:loginattempts:${identifier}`;
-  const count = await redis.incr(key);
-  if (count === 1) {
-    await redis.expire(key, LOGIN_ATTEMPT_WINDOW_SECONDS);
+  try {
+    const key = `admin:loginattempts:${identifier}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, LOGIN_ATTEMPT_WINDOW_SECONDS);
+    }
+    return count <= LOGIN_ATTEMPT_LIMIT;
+  } catch (err) {
+    // Fail open: a Redis hiccup shouldn't lock everyone out of login.
+    // Logged so real outages are still visible in Vercel's function logs.
+    console.error("login rate limit check failed", err);
+    return true;
   }
-  return count <= LOGIN_ATTEMPT_LIMIT;
 }
 
 async function resetLoginRateLimit(identifier) {
   if (!redis) return;
-  await redis.del(`admin:loginattempts:${identifier}`);
+  try {
+    await redis.del(`admin:loginattempts:${identifier}`);
+  } catch (err) {
+    console.error("login rate limit reset failed", err);
+  }
 }
 
 module.exports = {
