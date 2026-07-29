@@ -179,16 +179,38 @@ button:hover {
 }
 
 .ledger-row {
-    display: grid;
-    grid-template-columns: 70px 1fr 90px 24px;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.45rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 0.6rem 0;
     border-bottom: 1px solid var(--rule);
+}
+
+.ledger-row-top {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.ledger-row-desc {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.ledger-row-desc .desc-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ledger-row .amt {
     text-align: right;
+    flex-shrink: 0;
+    min-width: 56px;
 }
 
 .ledger-row .amt.debit {
@@ -204,13 +226,24 @@ button:hover {
     cursor: pointer;
     text-align: center;
     font-size: 0.9rem;
+    flex-shrink: 0;
+    padding: 6px 6px;
+    margin: -6px -4px -6px 0;
+    line-height: 1;
 }
 
 .ledger-row .rm:hover {
     color: var(--debit);
 }
 
-.ledger-row .d {
+.ledger-row-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 2px;
+}
+
+.ledger-row-meta .d {
     color: var(--text-dim2);
     font-size: 0.75rem;
 }
@@ -222,20 +255,8 @@ button:hover {
     border: 1px solid var(--brass-dim);
     border-radius: 2px;
     padding: 1px 5px;
-    margin-right: 6px;
     white-space: nowrap;
-}
-
-.desc-cell {
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-}
-
-.desc-cell .desc-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .monthly-summary {
@@ -366,6 +387,46 @@ button:hover {
 
 .balance-block .value.pos {
     color: var(--credit);
+}
+
+.sync-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-dim2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--credit);
+    animation: busy-pulse 1.6s ease-in-out infinite;
+}
+
+.sync-bad {
+    color: var(--debit);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.mono-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+}
+
+.mono-select {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
 }
 
 .habit-list {
@@ -770,6 +831,153 @@ button:hover {
     font-size: 0.72rem;
     letter-spacing: 0.08em;
     color: var(--text-dim2);
+}
+
+/* ========================================================================
+   Mobile responsiveness
+   ======================================================================== */
+@media (max-width: 640px) {
+    body {
+        padding: 1.25rem 1rem 3rem;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.85rem;
+        margin-bottom: 1.75rem;
+    }
+
+    h1 {
+        font-size: 1.7rem;
+    }
+
+    .header-controls {
+        width: 100%;
+        gap: 0.6rem;
+    }
+
+    .date-badge {
+        order: 10;
+        width: 100%;
+        font-size: 0.78rem;
+    }
+
+    .cols {
+        gap: 1.25rem;
+    }
+
+    section {
+        padding: 1.15rem 1.1rem 1.35rem;
+    }
+
+    #guide-section {
+        padding: 1.15rem 1.2rem 1.35rem;
+    }
+
+    h2 {
+        font-size: 1rem;
+    }
+
+    /* Buttons and inputs get bigger tap targets on touch screens */
+    button,
+    .file-btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.83rem;
+    }
+
+    input,
+    select {
+        padding: 0.6rem 0.65rem;
+        font-size: 0.9rem;
+    }
+
+    input[type=number] {
+        width: 92px;
+    }
+
+    .data-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .data-actions button,
+    .data-actions .file-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .household-code-row,
+    #household-section .data-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #household-code {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    .ms-totals {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ms-stat:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .cat-bar-label {
+        width: 68px;
+    }
+
+    .tally {
+        gap: 4px;
+    }
+
+    .tally-mark {
+        width: 14px;
+        height: 22px;
+    }
+
+    .habit-top {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .habit-rm,
+    .heatmap-toggle {
+        padding: 4px;
+    }
+
+    .preloader-word {
+        font-size: 1.35rem;
+    }
+
+    .busy-indicator {
+        bottom: 0.8rem;
+        right: 0.8rem;
+        left: 0.8rem;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 400px) {
+    h1 {
+        font-size: 1.45rem;
+    }
+
+    .ledger-row .amt {
+        min-width: 46px;
+        font-size: 0.78rem;
+    }
+
+    .cat-tag {
+        display: none;
+    }
+
+    .tally-lbl {
+        display: none;
+    }
 }
 
 #guide-section {

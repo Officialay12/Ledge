@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#101a17">
     <title>Ledger: expenses & habits</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,14 +38,11 @@
     <div class="wrap">
         <header>
             <h1>Ledger</h1>
-            <div style="display:flex; align-items:center; gap:1rem;">
-                <button type="button" id="household-toggle"
-                    style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">Personal</button>
-                <button type="button" id="guide-toggle"
-                    style="font-family:'IBM Plex Mono', monospace; font-size:0.75rem;">How to use</button>
-                <select id="currency-select"
-                    title="Sets the currency for this ledger. Switching relabels the display only — it does not convert past amounts."
-                    style="font-family:'IBM Plex Mono', monospace; font-size:0.8rem;"></select>
+            <div class="header-controls">
+                <button type="button" id="household-toggle" class="mono-btn">Personal</button>
+                <button type="button" id="guide-toggle" class="mono-btn">How to use</button>
+                <select id="currency-select" class="mono-select"
+                    title="Sets the currency for this ledger. Switching relabels the display only — it does not convert past amounts."></select>
                 <div class="date-badge" id="today-badge"></div>
             </div>
         </header>

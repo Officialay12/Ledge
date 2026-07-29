@@ -11,6 +11,13 @@
 (function () {
   if (window.storage) return; // already provided by the Claude artifact host — leave it alone
 
+  // Signals to script.js that we're running standalone (e.g. on Vercel),
+  // not inside a Claude artifact preview. script.js uses this to decide
+  // whether shared/household data should go through the /api/household
+  // backend (real cross-device sync) instead of window.storage's
+  // artifact-only "shared" scope.
+  window.__usingLocalStorageShim = true;
+
   const PREFIX = "ledger-app:";
 
   function fullKey(key, shared) {

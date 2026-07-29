@@ -1,0 +1,9 @@
+{
+  "name": "ledge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ledger: expenses & habits, with optional shared household ledgers",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
+}
