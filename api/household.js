@@ -14,7 +14,22 @@
 
 const { Redis } = require("@upstash/redis");
 
-const redis = Redis.fromEnv({ automaticDeserialization: false });
+// Read both possible naming schemes explicitly — don't rely on
+// Redis.fromEnv()'s fallback, which turned out not to pick up the
+// legacy KV_REST_API_* names reliably in practice.
+const REDIS_URL =
+  process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const REDIS_TOKEN =
+  process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+const redis =
+  REDIS_URL && REDIS_TOKEN
+    ? new Redis({
+        url: REDIS_URL,
+        token: REDIS_TOKEN,
+        automaticDeserialization: false,
+      })
+    : null;
 
 const MAX_VALUE_BYTES = 2 * 1024 * 1024; // 2MB safety cap per key
 
@@ -28,6 +43,17 @@ function isValidKey(key) {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+
+  if (!redis) {
+    console.error(
+      "household api error: no Redis env vars found (checked UPSTASH_REDIS_REST_URL/TOKEN and KV_REST_API_URL/TOKEN)",
+    );
+    res.status(500).json({
+      error:
+        "Storage backend error — is a Redis database connected to this Vercel project?",
+    });
+    return;
+  }
 
   const { code, key } = req.query;
 

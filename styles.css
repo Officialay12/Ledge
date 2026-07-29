@@ -822,6 +822,216 @@ button:hover {
     }
 }
 
+/* ---------- Offline banner ---------- */
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 950;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--brass-dim);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 0.8rem;
+    transform: translateY(-100%);
+    transition: transform 0.25s ease;
+}
+
+.offline-banner.show {
+    transform: translateY(0);
+}
+
+.offline-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--debit);
+    flex-shrink: 0;
+}
+
+/* ---------- Install-app button (shown only when the browser offers install) ---------- */
+#install-btn {
+    display: none;
+}
+
+#install-btn.available {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* ---------- Install popup ---------- */
+.install-popup-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 11, 9, 0.72);
+    backdrop-filter: blur(3px);
+    padding: 1.2rem;
+}
+
+.install-popup-backdrop.show {
+    display: flex;
+    animation: install-fade-in 0.2s ease;
+}
+
+@keyframes install-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.install-popup {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 1.8rem 1.6rem 1.6rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    text-align: center;
+    animation: install-pop-in 0.25s ease;
+}
+
+@keyframes install-pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.install-popup-close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+}
+
+.install-popup-close:hover {
+    color: var(--text);
+}
+
+.install-popup-icon {
+    margin-bottom: 0.8rem;
+}
+
+.install-popup h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    margin: 0 0 0.6rem;
+    color: var(--text);
+}
+
+.install-popup p {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin: 0 0 1.2rem;
+}
+
+.install-popup-steps {
+    text-align: left;
+    list-style: none;
+    counter-reset: install-step;
+    margin: 0 0 1.3rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.install-popup-steps li {
+    counter-increment: install-step;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.install-popup-steps li::before {
+    content: counter(install-step);
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--brass-dim);
+    color: var(--brass);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.install-step-icon {
+    display: none;
+}
+
+.install-popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.install-popup-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.install-popup-btn:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+}
+
+.install-popup-btn.primary {
+    background: var(--brass);
+    border-color: var(--brass);
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.install-popup-btn.primary:hover {
+    background: var(--brass-dim);
+    border-color: var(--brass-dim);
+    color: var(--text);
+}
+
 .site-footer {
     margin-top: 2.5rem;
     padding-top: 1.25rem;

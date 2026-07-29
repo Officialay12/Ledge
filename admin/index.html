@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101a17">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ledger — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+    <!-- ============ Login screen ============ -->
+    <div id="login-screen" class="login-screen">
+        <form id="login-form" class="login-card">
+            <h1>Ledger <span class="tag">admin</span></h1>
+            <p class="login-sub">Household ledger control panel. Restricted access.</p>
+            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required
+                autofocus>
+            <button type="submit" id="login-submit">Enter</button>
+            <div class="login-error" id="login-error" role="alert"></div>
+        </form>
+    </div>
+
+    <!-- ============ Dashboard ============ -->
+    <div id="dashboard" class="dashboard" style="display:none;">
+        <header class="admin-header">
+            <h1>Ledger <span class="tag">admin</span></h1>
+            <div class="admin-header-right">
+                <span class="household-count" id="household-count">— households</span>
+                <button type="button" class="mono-btn" id="refresh-btn">Refresh</button>
+                <button type="button" class="mono-btn" id="logout-btn">Log out</button>
+            </div>
+        </header>
+
+        <div class="admin-body">
+            <aside class="household-list-panel">
+                <input type="text" id="household-search" placeholder="Search household codes…" class="household-search">
+                <div class="household-list" id="household-list"></div>
+            </aside>
+
+            <main class="household-detail-panel" id="detail-panel">
+                <div class="empty-state" id="empty-state">
+                    <p>Select a household code from the list to view and edit its data.</p>
+                </div>
+
+                <div id="detail-content" style="display:none;">
+                    <div class="detail-top">
+                        <div>
+                            <h2 id="detail-code"></h2>
+                            <p class="detail-meta" id="detail-meta"></p>
+                        </div>
+                        <div class="detail-top-actions">
+                            <button type="button" class="mono-btn" id="save-btn" disabled>Save changes</button>
+                            <button type="button" class="mono-btn danger" id="delete-household-btn">Delete
+                                household</button>
+                        </div>
+                    </div>
+
+                    <div class="balance-summary" id="balance-summary"></div>
+
+                    <section class="detail-section">
+                        <div class="detail-section-head">
+                            <h3>Expenses <span class="tag" id="expenses-count"></span></h3>
+                            <button type="button" class="mono-btn small" id="add-expense-btn">+ Add row</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table id="expenses-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Kind</th>
+                                        <th>Category</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenses-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="detail-section">
+                        <div class="detail-section-head">
+                            <h3>Habits <span class="tag" id="habits-count"></span></h3>
+                            <button type="button" class="mono-btn small" id="add-habit-btn">+ Add row</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table id="habits-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Days logged</th>
+                                        <th>Current streak</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="habits-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="detail-section">
+                        <div class="detail-section-head">
+                            <h3>Recurring templates <span class="tag" id="recurring-count"></span></h3>
+                            <button type="button" class="mono-btn small" id="add-recurring-btn">+ Add row</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table id="recurring-table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Kind</th>
+                                        <th>Category</th>
+                                        <th>Day of month</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recurring-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="detail-section">
+                        <h3>Settings</h3>
+                        <label class="settings-label">
+                            Currency
+                            <select id="settings-currency"></select>
+                        </label>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

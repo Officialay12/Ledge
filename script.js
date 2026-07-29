@@ -1149,12 +1149,199 @@ document.getElementById("habit-form").addEventListener("submit", async (e) => {
 });
 
 /* =========================================================================
+   PWA: service worker, offline banner, install prompt
+   ========================================================================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((err) => {
+      console.warn("service worker registration failed", err);
+    });
+  });
+}
+
+function updateOfflineBanner() {
+  const banner = document.getElementById("offline-banner");
+  if (!banner) return;
+  banner.classList.toggle("show", !navigator.onLine);
+}
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+
+// Custom "Install app" button — browsers that support installable PWAs
+// (Chrome, Edge, most Android browsers) fire this instead of showing their
+// own prompt immediately, so we hold onto it and offer our own button.
+// iOS Safari never fires this event; it has no install prompt to trigger,
+// only the "Add to Home Screen" flow in the browser's own share menu, so
+// the button there simply stays hidden.
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.classList.add("available");
+  maybeShowInstallPopup(); // now that we actually have a prompt to offer
+});
+
+document.getElementById("install-btn").addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById("install-btn").classList.remove("available");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.classList.remove("available");
+  hideInstallPopup();
+  setInstallPopupState({ installed: true });
+});
+
+/* ---------- First-run "Install Ledger" popup ---------- */
+// Storage key lives in the personal (non-shared) scope, deliberately kept
+// separate from household data — install status is a per-browser/device
+// fact, not something that should sync to anyone sharing a household code.
+const INSTALL_POPUP_KEY = "pwa-install-popup";
+const INSTALL_SNOOZE_DAYS = 14;
+
+function isRunningStandalone() {
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true // legacy iOS flag
+  );
+}
+
+function isIOSDevice() {
+  const ua = window.navigator.userAgent;
+  const isAppleTouch = /iPad|iPhone|iPod/.test(ua);
+  // iPadOS 13+ reports as "Macintosh" but has touch support — distinguish
+  // it from an actual Mac.
+  const isIpadOS13 = ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+  return isAppleTouch || isIpadOS13;
+}
+
+async function getInstallPopupState() {
+  try {
+    const result = await window.storage.get(INSTALL_POPUP_KEY, false);
+    return result ? JSON.parse(result.value) : {};
+  } catch {
+    return {};
+  }
+}
+
+async function setInstallPopupState(state) {
+  try {
+    await window.storage.set(INSTALL_POPUP_KEY, JSON.stringify(state), false);
+  } catch (err) {
+    console.warn("could not persist install popup state", err);
+  }
+}
+
+function showInstallPopup(variant) {
+  const backdrop = document.getElementById("install-popup-backdrop");
+  const standard = document.getElementById("install-popup-standard");
+  const ios = document.getElementById("install-popup-ios");
+  if (!backdrop) return;
+  standard.style.display = variant === "ios" ? "none" : "block";
+  ios.style.display = variant === "ios" ? "block" : "none";
+  backdrop.classList.add("show");
+}
+
+function hideInstallPopup() {
+  document.getElementById("install-popup-backdrop")?.classList.remove("show");
+}
+
+async function dismissInstallPopup() {
+  hideInstallPopup();
+  await setInstallPopupState({ dismissedAt: Date.now() });
+}
+
+async function maybeShowInstallPopup() {
+  if (isRunningStandalone()) return; // already installed/opened as an app
+
+  const state = await getInstallPopupState();
+  if (state.installed) return;
+  if (state.dismissedAt) {
+    const daysSince = (Date.now() - state.dismissedAt) / (1000 * 60 * 60 * 24);
+    if (daysSince < INSTALL_SNOOZE_DAYS) return;
+  }
+
+  if (isIOSDevice()) {
+    showInstallPopup("ios");
+    return;
+  }
+
+  // Non-iOS: only show once the browser has actually offered an install
+  // prompt (deferredInstallPrompt set by beforeinstallprompt above).
+  // Browsers that don't support installable PWAs never fire that event,
+  // so this correctly stays silent there instead of showing a dead button.
+  if (deferredInstallPrompt) {
+    showInstallPopup("standard");
+  }
+}
+
+document
+  .getElementById("install-popup-close")
+  .addEventListener("click", dismissInstallPopup);
+document
+  .getElementById("install-popup-later-btn")
+  .addEventListener("click", dismissInstallPopup);
+document
+  .getElementById("install-popup-ios-got-it-btn")
+  .addEventListener("click", dismissInstallPopup);
+document
+  .getElementById("install-popup-backdrop")
+  .addEventListener("click", (e) => {
+    if (e.target.id === "install-popup-backdrop") dismissInstallPopup();
+  });
+
+document
+  .getElementById("install-popup-install-btn")
+  .addEventListener("click", async () => {
+    hideInstallPopup();
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    document.getElementById("install-btn")?.classList.remove("available");
+    if (outcome !== "accepted") {
+      await setInstallPopupState({ dismissedAt: Date.now() });
+    }
+  });
+
+// Honors the manifest's app shortcuts (long-press the install icon on
+// Android/desktop) by focusing the relevant field once the app is ready.
+function handleShortcutAction() {
+  const action = new URLSearchParams(window.location.search).get("action");
+  if (!action) return;
+  if (action === "quick-add") {
+    document.getElementById("quick-add-input")?.focus();
+  } else if (action === "habits") {
+    document
+      .getElementById("habit-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("habit-name")?.focus();
+  }
+  // Clean the query string so refreshing/sharing the URL later doesn't
+  // keep re-triggering the shortcut.
+  history.replaceState(null, "", window.location.pathname);
+}
+
+/* =========================================================================
    Boot
    ========================================================================= */
 (async function boot() {
+  updateOfflineBanner();
   const start = Date.now();
   await loadData();
   const elapsed = Date.now() - start;
   const wait = Math.max(0, MIN_PRELOAD_MS - elapsed);
-  setTimeout(hidePreloader, wait);
+  setTimeout(() => {
+    hidePreloader();
+    handleShortcutAction();
+    // Small extra delay after the preloader clears so the install popup
+    // never competes with it — nobody wants two overlays at once.
+    setTimeout(maybeShowInstallPopup, 900);
+  }, wait);
 })();
