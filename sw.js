@@ -12,7 +12,7 @@
 // - Navigation requests when fully offline -> fall back to cached index.html
 //   so the app still opens instead of showing the browser's offline page.
 
-const CACHE_VERSION = "ledger-v1";
+const CACHE_VERSION = "ledger-v2"; // bumped: manifest.json icon paths fixed (icons/ -> icon/)
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 

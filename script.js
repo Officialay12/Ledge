@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ayocodes
 
 /* =========================================================================
    Preloader / busy indicator
@@ -314,6 +314,7 @@ function manageHouseholdPolling() {
     pollTimer = null;
   }
   if (!IS_STANDALONE_DEPLOY || !isShared()) return;
+  if (document.hidden) return; // resumed by the visibilitychange listener below
 
   pollTimer = setInterval(async () => {
     try {
@@ -335,6 +336,21 @@ function manageHouseholdPolling() {
     updateHouseholdUI();
   }, 3000);
 }
+
+// Pause polling while the tab/app is backgrounded (saves battery and
+// avoids burning through Redis/API request quota for a screen nobody is
+// looking at), and pick up any changes immediately when it's foregrounded
+// again rather than waiting up to 3s for the next tick.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    return;
+  }
+  manageHouseholdPolling();
+});
 
 /* =========================================================================
    Data load / device settings
@@ -1157,6 +1173,18 @@ if ("serviceWorker" in navigator) {
       console.warn("service worker registration failed", err);
     });
   });
+
+  // sw.js calls self.skipWaiting() + clients.claim() as soon as a new
+  // version installs, so an open tab can suddenly find itself controlled
+  // by a different service worker than the one it started with. Reload
+  // once when that happens so the tab's HTML/JS/CSS line up with the new
+  // shell instead of running old app code against a new cache version.
+  let reloadingForNewVersion = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadingForNewVersion) return;
+    reloadingForNewVersion = true;
+    window.location.reload();
+  });
 }
 
 function updateOfflineBanner() {
@@ -1171,8 +1199,9 @@ window.addEventListener("offline", updateOfflineBanner);
 // (Chrome, Edge, most Android browsers) fire this instead of showing their
 // own prompt immediately, so we hold onto it and offer our own button.
 // iOS Safari never fires this event; it has no install prompt to trigger,
-// only the "Add to Home Screen" flow in the browser's own share menu, so
-// the button there simply stays hidden.
+// only the "Add to Home Screen" flow in the browser's own share menu — see
+// setupIOSInstallButton() below, which gives the button an iOS-specific job
+// instead of leaving it permanently hidden there.
 let deferredInstallPrompt = null;
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
@@ -1183,6 +1212,12 @@ window.addEventListener("beforeinstallprompt", (e) => {
 });
 
 document.getElementById("install-btn").addEventListener("click", async () => {
+  // iOS has no native install prompt to trigger — the button's job there
+  // is just to reopen the "Add to Home Screen" instructions on demand.
+  if (isIOSDevice() && !isRunningStandalone()) {
+    showInstallPopup("ios");
+    return;
+  }
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice;
@@ -1281,6 +1316,19 @@ async function maybeShowInstallPopup() {
   }
 }
 
+// Gives iOS users a persistent, on-demand way back into the "Add to Home
+// Screen" instructions, instead of only the one-time popup (which snoozes
+// for INSTALL_SNOOZE_DAYS once dismissed). iOS never fires
+// beforeinstallprompt, so without this the header button would just stay
+// hidden forever after the first dismissal.
+function setupIOSInstallButton() {
+  if (!isIOSDevice() || isRunningStandalone()) return;
+  const btn = document.getElementById("install-btn");
+  if (!btn) return;
+  btn.textContent = "Add to Home Screen";
+  btn.classList.add("available");
+}
+
 document
   .getElementById("install-popup-close")
   .addEventListener("click", dismissInstallPopup);
@@ -1333,6 +1381,7 @@ function handleShortcutAction() {
    ========================================================================= */
 (async function boot() {
   updateOfflineBanner();
+  setupIOSInstallButton();
   const start = Date.now();
   await loadData();
   const elapsed = Date.now() - start;
